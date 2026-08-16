@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shift-Academy — системный анализ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;600;700;800&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--i:#102445;--b:#2864f0;--m:#65758d;--l:#dce6f5}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#f7f9fd;color:var(--i);font:16px Manrope,sans-serif}
+.p{display:none}
+.p.on{display:block}
+.s{max-width:1180px;margin:auto;padding:0 30px}
+.mono{font:500 10px "DM Mono";letter-spacing:.13em;text-transform:uppercase}
+.brand{border:0;background:none;font:700 18px Unbounded;color:var(--i);letter-spacing:-.09em}
+.brand i{color:var(--b);font-style:normal}
+button{font:inherit;cursor:pointer}
+nav{height:88px;display:flex;align-items:center;justify-content:space-between}
+.links{display:flex;gap:27px}
+.links button,.back{border:0;background:none;color:#64748d;font-size:12px}
+.cta,.primary{border:0;border-radius:99px;padding:12px 18px;background:var(--i);color:#fff;font-weight:700;font-size:12px}
+.primary{background:var(--b);padding:16px 23px;box-shadow:0 14px 27px #2864f044}
+.hero{position:relative;overflow:hidden;background:radial-gradient(circle at 76% 32%,#9fe9ff88,transparent 23%),radial-gradient(circle at 58% 70%,#c0b4ff66,transparent 26%),#f5f9ff;min-height:720px}
+.hero:after,.final:after{content:"";position:absolute;inset:0;opacity:.13;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hero:before{content:"010010  // system.start()    011100  const direction = clarity;    001011  role: systems_analyst;";position:absolute;inset:0;padding:126px 0 0 8%;font:10px "DM Mono";letter-spacing:.16em;color:#2864f022;background:linear-gradient(#2864f012 1px,transparent 1px),linear-gradient(90deg,#2864f012 1px,transparent 1px);background-size:52px 52px}
+.hero>*{position:relative;z-index:1}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:50px;padding:86px 0 106px}
+.ey{color:var(--b);margin-bottom:23px}
+.dot{display:inline-block;width:8px;height:8px;background:#2bd9d5;border-radius:50%;margin-right:9px;box-shadow:0 0 0 6px #2bd9d533}
+h1,h2,h3,p{margin:0}
+h1{font:600 clamp(39px,5.3vw,71px)/1.06 Unbounded;letter-spacing:-.09em}
+h1 em,h2 em{color:var(--b);font-style:normal}
+.lead{max-width:560px;color:#53637d;line-height:1.65;font-size:17px;margin:27px 0 31px}
+.actions{display:flex;align-items:center;gap:15px}
+.tiny{font-size:11px;color:#718099}
+.card{max-width:410px;margin-left:auto;padding:26px;border-radius:29px;background:#ffffffc9;backdrop-filter:blur(15px);border:1px solid #fff;box-shadow:0 25px 80px #183a7730;transform:rotate(2deg)}
+.cardtop{display:flex;justify-content:space-between;color:#8090a7}
+.live{color:#20aa9e}
+.live:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#2accb8;margin-right:5px}
+.role{display:flex;align-items:center;gap:13px;margin:27px 0 16px}
+.icon{display:grid;place-items:center;width:47px;height:47px;border-radius:14px;background:linear-gradient(145deg,#2864f0,#49cdf4);color:#fff;font-size:20px}
+.role b{display:block}
+.role small{color:var(--m)}
+.line{height:31px;border-left:1px dashed #a6c5f8;margin-left:23px}
+.artifact{padding:14px;border:1px solid #e2ebf8;border-radius:16px;background:#f9fbff}
+.artifact .mono{color:#00a1bc;font-size:9px;margin-bottom:9px}
+.row{display:flex;justify-content:space-between;font-size:12px;font-weight:700}
+.salary{border-top:1px solid #e1eaf5;margin-top:18px;padding-top:16px;display:flex;justify-content:space-between;align-items:center}
+.salary span{font-size:11px;color:#73829a}
+.salary b{font-size:19px}
+.note{font-size:8px;color:#91a0b4;margin-top:12px}
+.ticker{height:59px;background:#fff;border-block:1px solid var(--l);display:flex;align-items:center;gap:26px;overflow:hidden;white-space:nowrap;color:#73839b;font-size:12px}
+.ticker b{color:var(--i)}
+.ticker i{color:var(--b);font-style:normal;font-size:17px}
+.block{padding:110px 0}
+.tag{color:var(--b);margin-bottom:16px}
+.title{font:600 clamp(29px,4.1vw,49px)/1.15 Unbounded;letter-spacing:-.08em;max-width:750px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:50px}
+.mcard{min-height:265px;background:#fff;border:1px solid var(--l);border-radius:24px;padding:25px}
+.mcard .mono{color:var(--b);margin-bottom:57px}
+.mcard h3{font:700 19px Unbounded;letter-spacing:-.07em;margin-bottom:12px}
+.mcard p,.copy{font-size:13px;line-height:1.65;color:var(--m)}
+.dark{margin-top:17px;padding:43px;border-radius:28px;background:#102445;color:#fff;display:grid;grid-template-columns:1fr 1fr;gap:35px;overflow:hidden}
+.dark h3{font:600 28px/1.22 Unbounded;letter-spacing:-.07em}
+.dark p{color:#b8c8df;line-height:1.65;font-size:13px}
+.career{background:#edf5ff}
+.careergrid{display:grid;grid-template-columns:.85fr 1.15fr;gap:80px}
+.copy{margin-top:20px;max-width:410px}
+.quote{margin-top:24px;padding:24px;background:#fff;border:1px solid var(--l);border-radius:22px}
+.quote b{font:600 18px Unbounded;letter-spacing:-.06em}
+.step{display:grid;grid-template-columns:60px 1fr;gap:18px;position:relative;padding-bottom:28px}
+.step:not(:last-child):before{content:"";position:absolute;left:13px;top:32px;height:calc(100% - 13px);border-left:1px dashed #9abdf6}
+.num{background:#fff;color:var(--b);width:27px;height:27px;border-radius:50%;display:grid;place-items:center;font:10px "DM Mono";box-shadow:0 0 0 7px #edf5ff}
+.step h3{font-size:15px;margin:3px 0 6px}
+.step p{font-size:13px;color:var(--m)}
+.final{position:relative;overflow:hidden;padding:100px 0;text-align:center;background:#102445;color:#fff}
+.final>*{position:relative;z-index:1}
+.final h2{font:600 clamp(29px,4vw,50px)/1.16 Unbounded;letter-spacing:-.08em;max-width:800px;margin:auto}
+.final p{color:#bdc9dc;max-width:530px;margin:22px auto 31px;font-size:14px;line-height:1.6}
+.footer{background:#0d1f3c;color:#9cacbf;padding:22px 0;font-size:10px}
+.foot{display:flex;justify-content:space-between}
+.footer button{border:0;background:none;color:#ccd8e9;font-size:10px}
+
+/* form */.app{min-height:100vh;background:radial-gradient(circle at 76% 4%,#d7eeff,transparent 28%),#f7faff}
+.app .s{max-width:880px}
+.appnav{height:84px;display:flex;justify-content:space-between;align-items:center}
+.prog{display:flex;justify-content:space-between;color:#8090a6;margin:50px 0 10px}
+.bar{height:5px;background:#e0e8f5;border-radius:99px}
+.bar i{display:block;height:100%;width:17%;background:linear-gradient(90deg,#2864f0,#40cce4);border-radius:99px;transition:.4s}
+.chat{padding-top:68px;min-height:535px}
+.ql{color:var(--b);margin-bottom:18px}
+.q{font:600 clamp(28px,4vw,43px)/1.18 Unbounded;letter-spacing:-.08em;max-width:730px}
+.sq{color:var(--m);margin-top:16px;font-size:14px}
+.choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.choice{border:1px solid #d3dfef;background:#fff;border-radius:99px;color:#58708e;padding:8px 12px;font-size:12px}
+.prompt{max-width:750px;margin-top:32px;padding:11px;border:1px solid #cbdaf1;border-radius:23px;background:#fff;box-shadow:0 18px 45px #2e5b9e19}
+.prompt textarea{width:100%;height:86px;border:0;outline:0;resize:none;padding:10px;background:transparent;font:15px Manrope;color:var(--i)}
+.bottom{display:flex;justify-content:space-between;align-items:center;padding:3px 5px;color:#8b9ab0;font-size:10px}
+.send{border:0;width:40px;height:40px;border-radius:50%;background:var(--b);color:#fff;font-size:19px}
+.success{display:none;text-align:center;padding:90px 0}
+.success.on{display:block}
+.orb{width:78px;height:78px;background:linear-gradient(145deg,#2864f0,#40d4df);display:grid;place-items:center;border-radius:50%;color:#fff;font-size:35px;margin:auto}
+.success h2{font:600 37px/1.2 Unbounded;letter-spacing:-.08em;margin:24px 0 14px}
+.success p{color:var(--m);max-width:470px;margin:0 auto 25px}
+.legal{min-height:100vh;background:#f2f6fc}
+.doc{max-width:840px;margin:30px auto 70px;padding:56px 67px;border-radius:24px;background:#fff;border:1px solid var(--l);box-shadow:0 20px 55px #29447012}
+.doc h1{font-size:31px;margin:18px 0}
+.updated{padding-bottom:30px;border-bottom:1px solid var(--l);font-size:12px;color:#8391a8}
+.notice{padding:15px;border-left:3px solid #4c8df5;background:#f2f7ff;color:#5b6f8c;font-size:12px;margin:25px 0}
+.doc h2{font:700 17px Unbounded;letter-spacing:-.06em;margin:30px 0 9px}
+.doc p,.doc li{font-size:13px;line-height:1.7;color:#60718d}
+@media(max-width:800px){.s{padding:0 20px}
+.links{display:none}
+.grid,.careergrid,.dark{grid-template-columns:1fr}
+.grid{padding-top:55px}
+.card{margin:25px auto 0;transform:none}
+.cards{grid-template-columns:1fr}
+.careergrid{gap:42px}
+.doc{margin:18px 13px;padding:33px 23px}
+.foot{flex-direction:column;gap:12px}
+}
+@media(max-width:430px){h1{font-size:38px}
+.hero{min-height:auto}
+.grid{padding-bottom:65px}
+.actions{align-items:flex-start;flex-direction:column}
+.block{padding:75px 0}
+}
+
+</style>
+</head>
+<body>
+<main id="home" class="p on">
+<section class="hero">
+<div class="s">
+<nav>
+<button class="brand" onclick="go('home')">shift<i>-</i>academy</button>
+<div class="links">
+<button onclick="scrollTo(0,620)">Подход</button>
+<button onclick="scrollTo(0,1510)">Траектория</button>
+<button onclick="go('offer')">Оферта</button>
+</div>
+<button class="cta" onclick="go('offer')">Публичная оферта ↗</button>
+</nav>
+<div class="grid">
+<div>
+<div class="ey mono">
+<i class="dot">
+</i>IT-образование с нуля / 01</div>
+<h1>Начните в IT.<br>
+<em>С нуля — уверенно.</em>
+<br>В профессии, где важна логика.</h1>
+<p class="lead">Освойте системный анализ с нуля — или перейдите из смежной сферы туда, где умение разбираться в сложном становится профессией.</p>
+<div class="actions">
+<button class="primary" onclick="go('form')">Пройти короткую анкету ↗</button>
+<span class="tiny">7 минут · без звонка · без спама</span>
+</div>
+</div>
+<div class="card">
+<div class="cardtop mono">
+<span>role.map / v1.0</span>
+<span class="live">live</span>
+</div>
+<div class="role">
+<div class="icon">⌘</div>
+<div>
+<b>Системный аналитик</b>
+<small>связующее звено продукта</small>
+</div>
+</div>
+<div class="line">
+</div>
+<div class="artifact">
+<div class="mono">Артефакт недели</div>
+<div class="row">
+<span>Схема API-интеграции</span>
+<span style="color:#1dbb99">✓</span>
+</div>
+</div>
+<div class="salary">
+<span>Ориентир после выхода в профессию*</span>
+<b>200—350k+</b>
+</div>
+<div class="note">*Не является гарантией дохода. Зависит от опыта и рынка.</div>
+</div>
+</div>
+</div>
+</section>
+<div class="ticker s">
+<b>Требования</b>
+<i>×</i>
+<b>Данные</b>
+<i>×</i>
+<b>API</b>
+<i>×</i>
+<b>Сценарии</b>
+<i>×</i>
+<b>SQL</b>
+<i>×</i>
+<b>Продуктовое мышление</b>
+</div>
+<section class="block">
+<div class="s">
+<div class="tag mono">Спроектировано для старта с нуля</div>
+<h2 class="title">Вы не «смотрите уроки».<br>Вы собираете <em>рабочее мышление.</em>
+</h2>
+<div class="cards">
+<article class="mcard">
+<div class="mono">01 / Основа</div>
+<h3>Разбираете</h3>
+<p>Как устроены цифровые продукты: процессы, данные, роли и ограничения.</p>
+</article>
+<article class="mcard">
+<div class="mono">02 / Практика</div>
+<h3>Собираете</h3>
+<p>Портфолио из задач, похожих на реальные: требования, схемы и интеграции.</p>
+</article>
+<article class="mcard">
+<div class="mono">03 / Выход</div>
+<h3>Примеряете</h3>
+<p>Роль аналитика до первого оффера — через обратную связь и карьерную подготовку.</p>
+</article>
+</div>
+<div class="dark">
+<div>
+<div class="mono" style="color:#64ccea;margin-bottom:15px">В фокусе — не инструменты, а мышление</div>
+<h3>Научитесь переводить «нам надо» в понятную систему.</h3>
+</div>
+<p>Это та часть IT, где не нужно быть разработчиком, чтобы влиять на то, что и зачем будет создано.</p>
+</div>
+</div>
+</section>
+<section class="block career">
+<div class="s careergrid">
+<div>
+<div class="tag mono">Как может выглядеть путь</div>
+<h2 class="title">Не резкий прыжок.<br>
+<em>Умный переход.</em>
+</h2>
+<p class="copy">Можно прийти без опыта в IT или перейти из смежной сферы. Главное — любопытство к тому, как всё устроено, и готовность практиковаться.</p>
+<div class="quote">
+<b>«Умею распутывать сложное»</b>
+<p class="copy">Это полезный навык, который становится профессией.</p>
+</div>
+</div>
+<div>
+<div class="step">
+<div class="num">01</div>
+<div>
+<h3>Собираете базу</h3>
+<p>Понимаете, из чего состоят IT-продукты и как говорят команды.</p>
+</div>
+</div>
+<div class="step">
+<div class="num">02</div>
+<div>
+<h3>Решаете задачи</h3>
+<p>Формулируете требования, моделируете процессы, проектируете интеграции.</p>
+</div>
+</div>
+<div class="step">
+<div class="num">03</div>
+<div>
+<h3>Упаковываете опыт</h3>
+<p>Показываете артефакты и уверенно проходите интервью.</p>
+</div>
+</div>
+<div class="step">
+<div class="num">04</div>
+<div>
+<h3>Выходите в роль</h3>
+<p>Получаете первую позицию и продолжаете расти вместе с рынком.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="final">
+<div class="s">
+<div class="mono" style="color:#5fcbe5;margin-bottom:17px">Следующая точка маршрута</div>
+<h2>Сначала поймём, подходим ли мы друг другу.</h2>
+<p>Ответьте на 6 коротких вопросов. Это не тест — только честный старт диалога.</p>
+<button class="primary" onclick="go('form')">Открыть анкету ↗</button>
+</div>
+</section>
+<footer class="footer">
+<div class="s foot">
+<span>© 2026 Shift-Academy / IT learning trajectories</span>
+<button onclick="go('offer')">Публичная оферта · Политика данных</button>
+</div>
+</footer>
+</main>
+<main id="form" class="p app">
+<div class="s">
+<div class="appnav">
+<button class="brand" onclick="go('home')">shift<i>-</i>academy</button>
+<button class="back" onclick="go('home')">← На главную</button>
+</div>
+<div id="flow">
+<div class="prog mono">
+<span id="pt">вопрос 01 / 06</span>
+<span id="pp">17%</span>
+</div>
+<div class="bar">
+<i id="pb">
+</i>
+</div>
+<div class="chat">
+<div id="ql" class="ql mono">
+</div>
+<h1 id="q" class="q">
+</h1>
+<p id="sq" class="sq">
+</p>
+<div id="opts" class="choices">
+</div>
+<div class="prompt">
+<textarea id="a" placeholder="Напишите ответ…">
+</textarea>
+<div class="bottom">
+<span>⌘ Enter или кнопка, чтобы продолжить</span>
+<button class="send" onclick="next()">↑</button>
+</div>
+</div>
+</div>
+</div>
+<div id="done" class="success">
+<div class="orb">✓</div>
+<h2>Спасибо,<br>
+<span id="name">будущий аналитик</span>.</h2>
+<p>Мы получили заявку. Если траектория окажется подходящей, команда свяжется с вами.</p>
+<button class="primary" onclick="go('home')">Вернуться на главную</button>
+</div>
+</div>
+</main>
+<main id="offer" class="p legal">
+<div class="s">
+<nav>
+<button class="brand" onclick="go('home')">shift<i>-</i>academy</button>
+<button class="back" onclick="go('home')">← На главную</button>
+</nav>
+<article class="doc">
+<div class="mono" style="color:#2864f0">Юридическая информация / версия 0.1</div>
+<h1>Публичная оферта</h1>
+<p class="updated">Актуально на 16 августа 2026 года</p>
+<div class="notice">Это визуальный шаблон. До публикации нужно дополнить реквизитами, программой и стоимостью, затем проверить у юриста.</div>
+<h2>1. Предмет оферты</h2>
+<p>Исполнитель предоставляет Заказчику доступ к образовательной программе по направлению «Системный анализ» и сопутствующим материалам.</p>
+<h2>2. Формат обучения</h2>
+<p>Программа может включать занятия, практические задания, обратную связь и карьерные консультации. Точный состав определяется выбранным тарифом.</p>
+<h2>3. Результаты и ответственность</h2>
+<p>Исполнитель не гарантирует трудоустройство, уровень дохода или получение конкретного оффера. Результат зависит от вовлечённости, опыта и ситуации на рынке.</p>
+<h2>4. Порядок оплаты и возврата</h2>
+<p>Стоимость, порядок оплаты и условия возврата указываются на странице программы либо в дополнительном соглашении до оплаты.</p>
+<h2>5. Реквизиты</h2>
+<ul>
+<li>Исполнитель: [указать ИП / ООО]</li>
+<li>ИНН: [указать]</li>
+<li>Контактный email: [указать]</li>
+</ul>
+</article>
+</div>
+</main>
+<script>const qs=[['Инициализация диалога / 01','Как вас зовут?','Так мы сможем обращаться к вам по-человечески.',[]],['Контекст / 02','Чем вы занимаетесь сейчас?','Можно коротко: работа, учёба или новый этап.',[]],['Мотивация / 03','Что в IT вам по-настоящему интересно?','Не ищем правильный ответ — хотим услышать ваш.',[]],['Опыт / 04','С какими задачами вы уже разбирались?','Процессы, таблицы, цифры, люди, логика — всё считается.',[]],['Ритм / 05','Сколько времени вы готовы выделять?','Лучше честная оценка, чем идеальный план.',['5–7 часов в неделю','8–12 часов в неделю','12+ часов в неделю']],['Контакт / 06','Как с вами удобно связаться?','Telegram username или номер телефона — только для ответа по анкете.',[]]];let n=0,ans=[];const $=x=>document.getElementById(x);function go(x){document.querySelectorAll('.p').forEach(e=>e.classList.remove('on'));$(x).classList.add('on');scrollTo(0,0);if(x==='form')setTimeout(()=>$('a').focus(),200)}
+function paint(){let z=qs[n],p=Math.round((n+1)*100/6);$('ql').textContent=z[0];$('q').textContent=z[1];$('sq').textContent=z[2];$('pt').textContent='вопрос '+String(n+1).padStart(2,'0')+' / 06';$('pp').textContent=p+'%';$('pb').style.width=p+'%';$('a').value='';$('opts').innerHTML=z[3].map(x=>'<button class="choice" onclick="pick(this.textContent)">'+x+'</button>').join('')}
+function pick(x){$('a').value=x;next()}
+function next(){let x=$('a').value.trim();if(!x)return $('a').focus();ans[n]=x;if(n<5){n++;paint()}
+else{$('flow').style.display='none';$('done').classList.add('on');$('name').textContent=ans[0]||'будущий аналитик'}
+}
+$('a').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();next()}
+}
+);paint()</script>
+</body>
+</html>
