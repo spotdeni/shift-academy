@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
   <title>shift*academy — Telegram avatar</title>
-  <rect width="512" height="512" rx="112" fill="#f5f8fc"/>
-  <circle cx="256" cy="256" r="208" fill="#ffffff" stroke="#dbe5f0" stroke-width="2"/>
+  <rect width="512" height="512" fill="#f5f8fc"/>
   <text x="256" y="274" text-anchor="middle" fill="#10243e" font-family="'Space Grotesk', Arial, Helvetica, sans-serif" font-size="50" font-weight="700" letter-spacing="-2">shift<tspan fill="#2563eb">*</tspan>academy</text>
 </svg>
