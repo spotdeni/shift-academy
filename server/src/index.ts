@@ -1,72 +1,21 @@
-import 'dotenv/config';
-import express from 'express';
-import Database from 'better-sqlite3';
-import { Markup, Telegraf } from 'telegraf';
-
-type Lead = { name: string; start: string; goal: string; time: string; contact: string };
-const token = process.env.TELEGRAM_BOT_TOKEN;
-const adminId = Number(process.env.TELEGRAM_ADMIN_ID);
-const adminUsernames = new Set((process.env.TELEGRAM_ADMIN_USERNAMES || 'maximbelov').split(',').map(value => value.trim().replace(/^@/, '').toLowerCase()).filter(Boolean));
-const port = Number(process.env.PORT || 8787);
-const webOrigin = process.env.WEB_ORIGIN || 'http://localhost:5173';
-if (!token || !Number.isInteger(adminId) || adminId <= 0) throw new Error('Set TELEGRAM_BOT_TOKEN and numeric TELEGRAM_ADMIN_ID in server/.env');
-
-const db = new Database('leads.db');
-db.exec("CREATE TABLE IF NOT EXISTS leads (id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL, payload TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'new'); CREATE TABLE IF NOT EXISTS administrators (telegram_id INTEGER PRIMARY KEY, username TEXT, added_at TEXT NOT NULL)");
-const bot = new Telegraf(token);
-const isAdmin = (ctx: any) => ctx.from?.id === adminId || adminUsernames.has(String(ctx.from?.username || '').toLowerCase());
-const labels: Record<string, string> = { new: 'новая', in_progress: 'в работе', postponed: 'отложена', closed: 'закрыта' };
-const buttons = (id: number) => Markup.inlineKeyboard([
-  [Markup.button.callback('В работу', `status:${id}:in_progress`), Markup.button.callback('Отложить', `status:${id}:postponed`)],
-  [Markup.button.callback('Закрыть', `status:${id}:closed`)],
-]);
-const formatLead = (id: number, lead: Lead, status = 'new') => `📩 Заявка #${id}\n\nИмя: ${lead.name}\nТочка старта: ${lead.start}\nЦель: ${lead.goal}\nВремя: ${lead.time}\nTelegram: ${lead.contact}\n\nСтатус: ${labels[status] || status}`;
-const asText = (value: unknown) => typeof value === 'string' ? value.trim().slice(0, 2000) : '';
-const validateLead = (payload: unknown): Lead | null => {
-  if (!payload || typeof payload !== 'object') return null;
-  const raw = payload as Record<string, unknown>;
-  const lead = { name: asText(raw.name), start: asText(raw.start), goal: asText(raw.goal), time: asText(raw.time), contact: asText(raw.contact) };
-  return Object.values(lead).every(Boolean) ? lead : null;
-};
-
-bot.start(ctx => {
-  if (!isAdmin(ctx)) return ctx.reply('Доступ закрыт.');
-  db.prepare('INSERT OR REPLACE INTO administrators(telegram_id, username, added_at) VALUES (?, ?, ?)').run(ctx.from.id, ctx.from.username || null, new Date().toISOString());
-  return ctx.reply('Админка shift*academy подключена. Новые заявки будут приходить сюда.\n\n/leads — последние 10 заявок\n/help — помощь');
-});
-bot.help(ctx => isAdmin(ctx) && ctx.reply('/leads — последние 10 заявок\nКнопками под заявкой можно менять её статус.'));
-bot.command('leads', async ctx => {
-  if (!isAdmin(ctx)) return;
-  const rows = db.prepare('SELECT * FROM leads ORDER BY id DESC LIMIT 10').all() as Array<{ id: number; payload: string; status: string }>;
-  if (!rows.length) return ctx.reply('Заявок пока нет.');
-  for (const row of rows) await ctx.reply(formatLead(row.id, JSON.parse(row.payload), row.status), buttons(row.id));
-});
-bot.action(/^status:(\d+):(in_progress|postponed|closed)$/, async ctx => {
-  if (!isAdmin(ctx)) return ctx.answerCbQuery('Нет доступа');
-  const [, id, status] = (ctx.callbackQuery as any).data.match(/^status:(\d+):(in_progress|postponed|closed)$/);
-  const existing = db.prepare('SELECT payload, status FROM leads WHERE id = ?').get(id) as { payload: string; status: string } | undefined;
-  if (!existing) return ctx.answerCbQuery('Заявка не найдена');
-  if (existing.status === status) return ctx.answerCbQuery(`Уже: ${labels[status]}`);
-  db.prepare('UPDATE leads SET status = ? WHERE id = ?').run(status, id);
-  await ctx.answerCbQuery(`Статус: ${labels[status]}`);
-  await ctx.editMessageText(formatLead(Number(id), JSON.parse(existing.payload), status), buttons(Number(id)));
-});
-
-const app = express();
-app.use((req, res, next) => { res.header('Access-Control-Allow-Origin', webOrigin); res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS'); res.header('Access-Control-Allow-Headers', 'Content-Type'); if (req.method === 'OPTIONS') return res.sendStatus(204); next(); });
-app.use(express.json({ limit: '32kb' }));
-app.post('/api/applications', async (req, res) => {
-  const lead = validateLead(req.body);
-  if (!lead) return res.status(400).json({ error: 'All application fields are required.' });
-  const result = db.prepare('INSERT INTO leads(created_at, payload, status) VALUES (?, ?, ?)').run(new Date().toISOString(), JSON.stringify(lead), 'new');
-  const id = Number(result.lastInsertRowid);
-  const recipients = new Set<number>([adminId, ...(db.prepare('SELECT telegram_id FROM administrators').all() as Array<{ telegram_id: number }>).map(row => row.telegram_id)]);
-  await Promise.all([...recipients].map(recipient => bot.telegram.sendMessage(recipient, formatLead(id, lead), buttons(id)).catch(error => console.error(`Telegram notification failed for ${recipient}:`, error))));
-  res.status(201).json({ id, status: 'new' });
-});
-app.get('/health', (_, res) => res.json({ ok: true }));
-app.listen(port, () => console.log(`API listening on ${port}`));
-
-bot.launch().then(() => console.log('Telegram bot connected')).catch(error => console.error('Telegram bot failed to start:', error));
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+import 'dotenv/config'; import express from 'express'; import Database from 'better-sqlite3'; import { Markup, Telegraf } from 'telegraf';
+type Lead={name:string;start:string;goal:string;time:string;contact:string}; type Row={id:number;payload:string;status:string;reminder_at:string|null};
+const token=process.env.TELEGRAM_BOT_TOKEN, adminId=Number(process.env.TELEGRAM_ADMIN_ID), port=Number(process.env.PORT||8787), webOrigin=process.env.WEB_ORIGIN||'http://localhost:5173';
+const admins=new Set((process.env.TELEGRAM_ADMIN_USERNAMES||'maximbelov').split(',').map(x=>x.trim().replace(/^@/,'').toLowerCase()).filter(Boolean)); if(!token||!Number.isInteger(adminId)||adminId<=0)throw new Error('Set Telegram env');
+const db=new Database('leads.db'); db.exec("CREATE TABLE IF NOT EXISTS leads(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,payload TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'new'); CREATE TABLE IF NOT EXISTS administrators(telegram_id INTEGER PRIMARY KEY,username TEXT,added_at TEXT NOT NULL)");
+const cols=db.prepare('PRAGMA table_info(leads)').all() as Array<{name:string}>; if(!cols.some(x=>x.name==='reminder_at'))db.exec('ALTER TABLE leads ADD COLUMN reminder_at TEXT'); if(!cols.some(x=>x.name==='reminder_sent'))db.exec('ALTER TABLE leads ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0');
+db.prepare("UPDATE leads SET status='need_contact' WHERE status IN ('new','postponed')").run(); db.prepare("UPDATE leads SET status='rejected' WHERE status='closed'").run();
+const bot=new Telegraf(token), isAdmin=(c:any)=>c.from?.id===adminId||admins.has(String(c.from?.username||'').toLowerCase());
+const labels:Record<string,string>={need_contact:'нужно связаться',in_progress:'в работе',rejected:'отклонён'};
+const menu=Markup.keyboard([['📞 Нужно связаться','🛠 В работе'],['❌ Отклонённые','📋 Все лиды']]).resize();
+const buttons=(id:number)=>Markup.inlineKeyboard([[Markup.button.callback('📞 Связаться',`s:${id}:need_contact`),Markup.button.callback('🛠 В работу',`s:${id}:in_progress`)],[Markup.button.callback('❌ Отклонить',`s:${id}:rejected`),Markup.button.callback('⏱ +1 час',`r:${id}:1`)],[Markup.button.callback('🕘 Завтра',`r:${id}:24`),Markup.button.callback('🗑 Снять таймер',`r:${id}:0`)]]);
+const fmt=(r:Row)=>{const x=JSON.parse(r.payload) as Lead; const reminder=r.reminder_at?`\nНапомнить: ${new Date(r.reminder_at).toLocaleString('ru-RU',{timeZone:'Europe/Moscow'})} МСК`:'';return `👤 Лид #${r.id}\n\nИмя: ${x.name}\nТочка старта: ${x.start}\nЦель: ${x.goal}\nВремя: ${x.time}\nTelegram: ${x.contact}\n\nСтатус: ${labels[r.status]||r.status}${reminder}`};
+async function list(ctx:any,status?:string){const rows=(status?db.prepare('SELECT * FROM leads WHERE status=? ORDER BY id DESC LIMIT 30').all(status):db.prepare('SELECT * FROM leads ORDER BY id DESC LIMIT 30').all()) as Row[];if(!rows.length)return ctx.reply('В этом списке пока никого нет.',menu);for(const r of rows)await ctx.reply(fmt(r),buttons(r.id));}
+bot.start(c=>{if(!isAdmin(c))return c.reply('Доступ закрыт.');db.prepare('INSERT OR REPLACE INTO administrators VALUES(?,?,?)').run(c.from.id,c.from.username||null,new Date().toISOString());return c.reply('CRM shift*academy открыта. Выберите список:',menu)}); bot.help(c=>isAdmin(c)&&c.reply('Меняйте статус кнопками на карточке. Таймер +1 час или до этого же времени завтра.',menu));
+bot.hears('📞 Нужно связаться',c=>isAdmin(c)&&list(c,'need_contact')); bot.hears('🛠 В работе',c=>isAdmin(c)&&list(c,'in_progress')); bot.hears('❌ Отклонённые',c=>isAdmin(c)&&list(c,'rejected')); bot.hears('📋 Все лиды',c=>isAdmin(c)&&list(c)); bot.command('leads',c=>isAdmin(c)&&list(c));
+bot.action(/^s:(\d+):(need_contact|in_progress|rejected)$/,async c=>{if(!isAdmin(c))return c.answerCbQuery('Нет доступа');const [,id,status]=(c.callbackQuery as any).data.match(/^s:(\d+):(need_contact|in_progress|rejected)$/);db.prepare('UPDATE leads SET status=? WHERE id=?').run(status,id);const r=db.prepare('SELECT * FROM leads WHERE id=?').get(id) as Row;await c.answerCbQuery(`Статус: ${labels[status]}`);return c.editMessageText(fmt(r),buttons(+id))});
+bot.action(/^r:(\d+):(0|1|24)$/,async c=>{if(!isAdmin(c))return c.answerCbQuery('Нет доступа');const [,id,h]=(c.callbackQuery as any).data.match(/^r:(\d+):(0|1|24)$/);const at=+h?new Date(Date.now()+(+h)*3600000).toISOString():null;db.prepare('UPDATE leads SET reminder_at=?, reminder_sent=0 WHERE id=?').run(at,id);const r=db.prepare('SELECT * FROM leads WHERE id=?').get(id) as Row;await c.answerCbQuery(at?'Таймер установлен':'Таймер снят');return c.editMessageText(fmt(r),buttons(+id))});
+const recipients=()=>new Set<number>([adminId,...(db.prepare('SELECT telegram_id FROM administrators').all() as Array<{telegram_id:number}>).map(x=>x.telegram_id)]);
+setInterval(async()=>{const due=db.prepare("SELECT * FROM leads WHERE reminder_at IS NOT NULL AND reminder_sent=0 AND reminder_at<=?").all(new Date().toISOString()) as Row[];for(const r of due){for(const id of recipients())await bot.telegram.sendMessage(id,`⏰ Пора связаться\n\n${fmt(r)}`,buttons(r.id)).catch(console.error);db.prepare('UPDATE leads SET reminder_sent=1 WHERE id=?').run(r.id)}},30000);
+const app=express();app.use((q,s,n)=>{s.header('Access-Control-Allow-Origin',webOrigin);s.header('Access-Control-Allow-Headers','Content-Type');if(q.method==='OPTIONS')return s.sendStatus(204);n()});app.use(express.json({limit:'32kb'}));
+const text=(v:unknown)=>typeof v==='string'?v.trim().slice(0,2000):'';app.post('/api/applications',async(q,s)=>{const x=q.body||{},lead:Lead={name:text(x.name),start:text(x.start),goal:text(x.goal),time:text(x.time),contact:text(x.contact)};if(!Object.values(lead).every(Boolean))return s.status(400).json({error:'All fields required'});const id=Number(db.prepare("INSERT INTO leads(created_at,payload,status) VALUES(?,?,'need_contact')").run(new Date().toISOString(),JSON.stringify(lead)).lastInsertRowid),r=db.prepare('SELECT * FROM leads WHERE id=?').get(id) as Row;for(const a of recipients())await bot.telegram.sendMessage(a,fmt(r),buttons(id)).catch(console.error);s.status(201).json({id,status:'need_contact'})});app.get('/health',(_,s)=>s.json({ok:true}));app.listen(port,()=>console.log(`API listening on ${port}`));bot.launch().then(()=>console.log('Bot connected')).catch(console.error);process.once('SIGINT',()=>bot.stop());process.once('SIGTERM',()=>bot.stop());
